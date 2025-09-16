@@ -14,6 +14,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.ResourceBundle;
+import java.util.TreeMap;
 
 public class TP3Controller implements Initializable {
     private HashMap<String, HashMap<String, ArrayList<Tache>>> mesTaches;
@@ -52,11 +53,105 @@ public class TP3Controller implements Initializable {
     @FXML
     public void cmdValiderClicked(Event event)
     {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Erreur sur vos informations");
+        alert.setHeaderText("");
 
+        String nomTache = txtNomTache.getText();
+
+        if (lstThemes.getSelectionModel().getSelectedItem() == null) {
+            alert.setContentText("Veuillez sélectionner le thème");
+            alert.showAndWait();
+            return;
+        }
+
+        if (lstProjets.getSelectionModel().getSelectedItem() == null) {
+            alert.setContentText("Veuillez sélectionner un projet");
+            alert.showAndWait();
+            return;
+        }
+
+        if (nomTache.isEmpty()) {
+            alert.setContentText("Veuillez entrer le nom de la tâche");
+            alert.showAndWait();
+            return;
+        }
+
+        String selectedTheme = lstThemes.getSelectionModel().getSelectedItem().toString();
+        String selectedProjet = lstProjets.getSelectionModel().getSelectedItem().toString();
+        Tache task = new Tache(nomTache, cboDeveloppeurs.getSelectionModel().getSelectedItem().toString(), false);
+
+
+        if (!mesTaches.containsKey(selectedTheme)) {
+            mesTaches.put(selectedTheme, new HashMap<>());
+        }
+
+        if (!mesTaches.get(selectedTheme).containsKey(selectedProjet)) {
+            mesTaches.get(selectedTheme).put(selectedProjet, new ArrayList<>());
+        }
+
+        mesTaches.get(selectedTheme).get(selectedProjet).add(task);
+
+        clearForm();
+        updateTreeView();
     }
 
-    @FXML
-    public void tvTachesClicked(Event event)  {
 
+    private void clearForm() {
+        txtNomTache.clear();
+        cboDeveloppeurs.getSelectionModel().selectFirst();
+    }
+
+    private void updateTreeView() {
+        racine.getChildren().clear();
+
+        mesTaches.forEach((theme, projets) -> {
+            TreeItem<String> themeNode = new TreeItem<>(theme);
+
+            projets.forEach((projet, tasks) -> {
+                TreeItem<String> projetNode = new TreeItem<>(projet);
+
+                tasks.forEach(task -> {
+                    TreeItem<String> taskNode = new TreeItem<>(
+                            task.getNomDeveloppeur() + " : " + task.getNomTache() + " : " +
+                                    (task.isEstTerminee() ? "true" : "false")
+                    );
+                    projetNode.getChildren().add(taskNode);
+                    taskNode.setExpanded(true);
+                });
+
+                themeNode.getChildren().add(projetNode);
+                projetNode.setExpanded(true);
+            });
+
+            racine.getChildren().add(themeNode);
+            themeNode.setExpanded(true);
+        });
+    }
+
+
+    @FXML
+    public void tvTachesClicked(Event event) {
+        TreeItem<?> selected = (TreeItem<?>) tvTaches.getSelectionModel().getSelectedItem();
+        if (selected == null) return;
+
+        if (selected.getValue().toString().contains(":")) {
+            String projet = selected.getParent().getValue().toString();
+            String theme = selected.getParent().getParent().getValue().toString();
+            String taskText = selected.getValue().toString();
+            String[] parts = taskText.split(" : ");
+            String nomDev = parts[0];
+            String nomTache = parts[1];
+
+            ArrayList<Tache> tasks = mesTaches.get(theme).get(projet);
+
+            tasks.forEach(task -> {
+                if (task.getNomDeveloppeur().equals(nomDev) && task.getNomTache().equals(nomTache)) {
+                    task.setEstTerminee(!task.isEstTerminee());
+                }
+            });
+
+            updateTreeView();
+        }
     }
 }
