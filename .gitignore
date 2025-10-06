@@ -38,6 +38,6 @@ build/
 .idea/
 
 ### DOCX ###
-~$3 - Thèmes - Projets - Tâches.docx
+**.docx
 ### Mac OS ###
 .DS_Store

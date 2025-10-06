@@ -145,11 +145,21 @@ public class TP3Controller implements Initializable {
 
             ArrayList<Tache> tasks = mesTaches.get(theme).get(projet);
 
+            // 1er Méthode
             tasks.forEach(task -> {
                 if (task.getNomDeveloppeur().equals(nomDev) && task.getNomTache().equals(nomTache)) {
                     task.setEstTerminee(!task.isEstTerminee());
                 }
             });
+
+            /** 2eme Méthode
+            Tache task =  mesTaches.get(theme).get(projet).stream().filter(t ->
+                    t.getNomDeveloppeur().equals(nomDev) && t.getNomTache().equals(nomTache)).findAny().orElse(null);
+
+            if (task.isEstTerminee()) {
+                task.setEstTerminee(!task.isEstTerminee());
+            }
+            **/
 
             updateTreeView();
         }
